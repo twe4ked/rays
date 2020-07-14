@@ -4,7 +4,7 @@ mod ppm;
 mod ray;
 mod vec3;
 
-use ray::Ray;
+use ray::{Ray, Sphere, Surface};
 use vec3::Vec3;
 
 use std::io;
@@ -28,6 +28,17 @@ fn main() -> io::Result<()> {
 
     ppm::write_header(&mut stdout, image_width, image_height)?;
 
+    let world: Vec<Box<dyn Surface>> = vec![
+        Box::new(Sphere {
+            center: Vec3::new(0.0, 0.0, -1.0),
+            radius: 0.5,
+        }),
+        Box::new(Sphere {
+            center: Vec3::new(0.0, -100.5, -1.0),
+            radius: 100.0,
+        }),
+    ];
+
     for j in (0..image_height).rev() {
         eprint!(".");
 
@@ -39,7 +50,7 @@ fn main() -> io::Result<()> {
                 lower_left_corner + u * horizontal + v * vertical - origin,
             );
 
-            ppm::write_color(&mut stdout, &ray.color())?;
+            ppm::write_color(&mut stdout, &ray.color(&world))?;
         }
     }
 
