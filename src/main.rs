@@ -2,10 +2,12 @@
 
 mod camera;
 mod ppm;
+mod rand;
 mod ray;
 mod vec3;
 
 use camera::Camera;
+use rand::Rand;
 use ray::{Sphere, Surface};
 use vec3::Vec3;
 
