@@ -41,6 +41,10 @@ impl Rand {
         self.d = e.wrapping_add(self.a);
         self.d
     }
+
+    pub fn next_f32(&mut self) -> f32 {
+        (self.next() as f64 / u32::MAX as f64) as _
+    }
 }
 
 #[cfg(test)]
@@ -58,6 +62,19 @@ mod tests {
         }
 
         assert_eq!(v, 3863832633);
+    }
+
+    #[test]
+    fn tests_rand_next_f32() {
+        let seed = 42;
+        let mut rand = Rand::new(seed);
+
+        let mut v = 0.0;
+        for _ in 0..100 {
+            v = rand.next_f32();
+        }
+
+        assert_eq!(v, 0.8996186);
     }
 
     #[test]

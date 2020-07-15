@@ -11,7 +11,10 @@ use rand::Rand;
 use ray::{Sphere, Surface};
 use vec3::Vec3;
 
+use std::cell::RefCell;
 use std::io;
+
+thread_local! { static RAND: RefCell<Rand> = RefCell::new(Rand::new_from_time()); }
 
 fn main() -> io::Result<()> {
     let camera = Camera::new();
@@ -38,8 +41,7 @@ fn main() -> io::Result<()> {
     let samples_per_pixel = 100;
     let max_depth = 50;
 
-    let mut rand_ctx = Rand::new_from_time();
-    let mut rand = || (rand_ctx.next() as f64 / u64::MAX as f64) as f32;
+    let rand = || crate::RAND.with(|r| r.borrow_mut().next_f32());
 
     for j in (0..(camera.image_height as usize)).rev() {
         eprint!(".");
