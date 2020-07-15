@@ -87,12 +87,29 @@ pub struct Ray {
     direction: Vec3,
 }
 
+// Random Vec3 within a sphere
+#[allow(dead_code)]
 fn random_in_unit_sphere() -> Vec3 {
     loop {
         let p = Vec3::random(-1.0, 1.0);
         if !(p.length_squared() >= 1.0) {
             return p;
         }
+    }
+}
+
+// Lambertian distribution
+fn random_unit_vec3() -> Vec3 {
+    let rand = |min, max| crate::RAND.with(|r| r.borrow_mut().next_between_f32(min, max));
+
+    let a = rand(0.0, 2.0 * std::f32::consts::PI);
+    let z = rand(-1.0, 1.0);
+    let r = (1.0 - z * z).sqrt();
+
+    Vec3 {
+        x: r * a.cos(),
+        y: r * a.sin(),
+        z,
     }
 }
 
@@ -113,7 +130,7 @@ impl Ray {
         if let Some(hit_record) = HitRecord::from_world(self, &world) {
             match hit_record.normal {
                 Normal::FrontFace(normal) | Normal::BackFace(normal) => {
-                    let target = hit_record.p + normal + random_in_unit_sphere();
+                    let target = hit_record.p + normal + random_unit_vec3();
                     0.5 * Ray::new(hit_record.p, target - hit_record.p).color(world, depth - 1)
                 }
             }
