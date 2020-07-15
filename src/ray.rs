@@ -113,6 +113,19 @@ fn random_unit_vec3() -> Vec3 {
     }
 }
 
+// Hemispherical scattering
+#[allow(dead_code)]
+fn random_in_hemisphere(normal: &Vec3) -> Vec3 {
+    let in_unit_sphere = random_in_unit_sphere();
+
+    // In the same hemisphere as the normal
+    if in_unit_sphere.dot(normal) > 0.0 {
+        in_unit_sphere
+    } else {
+        -in_unit_sphere
+    }
+}
+
 impl Ray {
     pub fn new(origin: Vec3, direction: Vec3) -> Self {
         Self { origin, direction }
@@ -131,6 +144,7 @@ impl Ray {
             match hit_record.normal {
                 Normal::FrontFace(normal) | Normal::BackFace(normal) => {
                     let target = hit_record.p + normal + random_unit_vec3();
+                    // let target = hit_record.p + random_in_hemisphere(&normal);
                     0.5 * Ray::new(hit_record.p, target - hit_record.p).color(world, depth - 1)
                 }
             }
