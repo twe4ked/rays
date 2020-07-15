@@ -2,14 +2,14 @@
 
 #[derive(Copy, Clone)]
 pub struct Rand {
-    a: u64,
-    b: u64,
-    c: u64,
-    d: u64,
+    a: u32,
+    b: u32,
+    c: u32,
+    d: u32,
 }
 
 impl Rand {
-    pub fn new(seed: u64) -> Self {
+    pub fn new(seed: u32) -> Self {
         let mut rand = Rand {
             a: 0xf1ea5eed,
             d: seed,
@@ -29,10 +29,10 @@ impl Rand {
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .as_secs();
-        Rand::new(seed)
+        Rand::new(seed as _)
     }
 
-    pub fn next(&mut self) -> u64 {
+    pub fn next(&mut self) -> u32 {
         let rot = |x, k| (x << k) | (x >> (32 - k));
         let e = self.a.wrapping_sub(rot(self.b, 27));
         self.a = self.b ^ rot(self.c, 17);
@@ -57,7 +57,7 @@ mod tests {
             v = rand.next();
         }
 
-        assert_eq!(v, 6895266172536598682);
+        assert_eq!(v, 3863832633);
     }
 
     #[test]
