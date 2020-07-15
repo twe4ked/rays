@@ -24,7 +24,7 @@ impl HitRecord {
     }
 
     fn from_world(ray: &Ray, world: &[Box<dyn Surface>]) -> Option<Self> {
-        let t_min = 0.0;
+        let t_min = 0.001;
         let t_max = f32::INFINITY;
 
         let mut closest_so_far = t_max;
