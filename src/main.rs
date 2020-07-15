@@ -35,15 +35,24 @@ fn main() -> io::Result<()> {
         }),
     ];
 
+    let mut rand_ctx = Rand::new_from_time();
+    let mut rand = || (rand_ctx.next() as f64 / u64::MAX as f64) as f32;
+
     for j in (0..(camera.image_height as usize)).rev() {
         eprint!(".");
 
         for i in 0..(camera.image_width as usize) {
-            let u = i as f32 / (camera.image_width - 1.0);
-            let v = j as f32 / (camera.image_height - 1.0);
-            let ray = camera.get_ray(u, v);
+            let mut color = Vec3::new(0.0, 0.0, 0.0);
 
-            ppm::write_color(&mut stdout, &ray.color(&world))?;
+            let samples_per_pixel = 100;
+            for _ in 0..samples_per_pixel {
+                let u = (i as f32 + rand()) / (camera.image_width - 1.0);
+                let v = (j as f32 + rand()) / (camera.image_height - 1.0);
+                let ray = camera.get_ray(u, v);
+                color = color + ray.color(&world);
+            }
+
+            ppm::write_color(&mut stdout, &color, samples_per_pixel as _)?;
         }
     }
 

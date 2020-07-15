@@ -33,8 +33,9 @@ impl Rand {
     }
 
     pub fn next(&mut self) -> u64 {
-        let e = self.a.wrapping_sub(self.b << 27 | self.b >> 32 - 27);
-        self.a = self.b ^ (self.c << 17 | self.c >> 32 - 17);
+        let rot = |x, k| (x << k) | (x >> (32 - k));
+        let e = self.a.wrapping_sub(rot(self.b, 27));
+        self.a = self.b ^ rot(self.c, 17);
         self.b = self.c.wrapping_add(self.d);
         self.c = self.d.wrapping_add(e);
         self.d = e.wrapping_add(self.a);
