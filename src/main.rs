@@ -56,7 +56,9 @@ fn main() -> io::Result<()> {
                 color = color + ray.color(&world, max_depth);
             }
 
-            ppm::write_color(&mut stdout, &color, samples_per_pixel as _)?;
+            color = translate_color(&color, samples_per_pixel as _);
+
+            ppm::write_color(&mut stdout, &color)?;
         }
     }
 
@@ -64,4 +66,9 @@ fn main() -> io::Result<()> {
     eprintln!("Finished");
 
     Ok(())
+}
+
+fn translate_color(color: &Vec3, samples_per_pixel: f32) -> Vec3 {
+    let scale = 1.0 / samples_per_pixel;
+    *color * scale
 }
