@@ -1,20 +1,22 @@
 // https://burtleburtle.net/bob/rand/smallprng.html
 
+use std::num::Wrapping;
+
 #[derive(Copy, Clone)]
 pub struct Rand {
-    a: u32,
-    b: u32,
-    c: u32,
-    d: u32,
+    a: Wrapping<u32>,
+    b: Wrapping<u32>,
+    c: Wrapping<u32>,
+    d: Wrapping<u32>,
 }
 
 impl Rand {
     pub fn new(seed: u32) -> Self {
         let mut rand = Rand {
-            a: 0xf1ea5eed,
-            d: seed,
-            c: seed,
-            b: seed,
+            a: Wrapping(0xf1ea5eed),
+            d: Wrapping(seed),
+            c: Wrapping(seed),
+            b: Wrapping(seed),
         };
         for _ in 0..20 {
             rand.next();
@@ -34,12 +36,12 @@ impl Rand {
 
     pub fn next(&mut self) -> u32 {
         let rot = |x, k| (x << k) | (x >> (32 - k));
-        let e = self.a.wrapping_sub(rot(self.b, 27));
+        let e = self.a - rot(self.b, 27);
         self.a = self.b ^ rot(self.c, 17);
-        self.b = self.c.wrapping_add(self.d);
-        self.c = self.d.wrapping_add(e);
-        self.d = e.wrapping_add(self.a);
-        self.d
+        self.b = self.c + self.d;
+        self.c = self.d + e;
+        self.d = e + self.a;
+        self.d.0
     }
 
     pub fn next_f32(&mut self) -> f32 {
