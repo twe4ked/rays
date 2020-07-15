@@ -1,3 +1,5 @@
+use crate::rand::Rand;
+
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Copy, Clone)]
@@ -10,6 +12,14 @@ pub struct Vec3 {
 impl Vec3 {
     pub fn new(x: f32, y: f32, z: f32) -> Self {
         Self { x, y, z }
+    }
+
+    pub fn random(rand_ctx: &mut Rand, min: f32, max: f32) -> Self {
+        let mut rand = || {
+            let r = ((rand_ctx.next() as f64 - 1.0) / u64::MAX as f64) as f32;
+            min + (max - min) * r
+        };
+        Self::new(rand(), rand(), rand())
     }
 
     fn length(&self) -> f32 {

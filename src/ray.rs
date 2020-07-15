@@ -1,3 +1,4 @@
+use crate::rand::Rand;
 use crate::vec3::Vec3;
 
 enum Normal {
@@ -87,6 +88,16 @@ pub struct Ray {
     direction: Vec3,
 }
 
+fn random_in_unit_sphere() -> Vec3 {
+    let mut rand_ctx = Rand::new_from_time();
+    loop {
+        let p = Vec3::random(&mut rand_ctx, -1.0, 1.0);
+        if !(p.length_squared() >= 1.0) {
+            return p;
+        }
+    }
+}
+
 impl Ray {
     pub fn new(origin: Vec3, direction: Vec3) -> Self {
         Self { origin, direction }
@@ -96,11 +107,17 @@ impl Ray {
         self.origin + (t * self.direction)
     }
 
-    pub fn color(&self, world: &[Box<dyn Surface>]) -> Vec3 {
-        if let Some(hr) = HitRecord::from_world(self, &world) {
-            match hr.normal {
-                Normal::FrontFace(normal) => 0.5 * (normal + Vec3::new(1.0, 1.0, 1.0)),
-                Normal::BackFace(_) => todo!(),
+    pub fn color(&self, world: &[Box<dyn Surface>], depth: usize) -> Vec3 {
+        if depth == 0 {
+            return Vec3::new(0.0, 0.0, 0.0);
+        }
+
+        if let Some(hit_record) = HitRecord::from_world(self, &world) {
+            match hit_record.normal {
+                Normal::FrontFace(normal) | Normal::BackFace(normal) => {
+                    let target = hit_record.p + normal + random_in_unit_sphere();
+                    0.5 * Ray::new(hit_record.p, target - hit_record.p).color(world, depth - 1)
+                }
             }
         } else {
             let unit_direction = self.direction.unit_vector();
