@@ -70,5 +70,14 @@ fn main() -> io::Result<()> {
 
 fn translate_color(color: &Vec3, samples_per_pixel: f32) -> Vec3 {
     let scale = 1.0 / samples_per_pixel;
-    *color * scale
+
+    // Divide the color total by the number of samples
+    let color = *color * scale;
+
+    // Gamma-correct for gamma=2.0
+    Vec3 {
+        x: color.x.sqrt(),
+        y: color.y.sqrt(),
+        z: color.z.sqrt(),
+    }
 }
