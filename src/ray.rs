@@ -2,6 +2,8 @@ use crate::material::Material;
 use crate::surface::Surface;
 use crate::vec3::Vec3;
 
+type World = [(Box<dyn Surface>, Box<dyn Material>)];
+
 pub enum Normal {
     FrontFace(Vec3),
     BackFace(Vec3),
@@ -52,7 +54,7 @@ impl Ray {
         self.origin + (t * self.direction)
     }
 
-    pub fn color(&self, world: &[(Box<dyn Surface>, Box<dyn Material>)], depth: usize) -> Vec3 {
+    pub fn color(&self, world: &World, depth: usize) -> Vec3 {
         if depth == 0 {
             return Vec3::new(0.0, 0.0, 0.0);
         }
@@ -70,10 +72,7 @@ impl Ray {
         }
     }
 
-    fn hit_record_from_world<'a>(
-        &self,
-        world: &'a [(Box<dyn Surface>, Box<dyn Material>)],
-    ) -> Option<HitRecord<'a>> {
+    fn hit_record_from_world<'a>(&self, world: &'a World) -> Option<HitRecord<'a>> {
         let t_min = 0.001;
         let t_max = f32::INFINITY;
 
