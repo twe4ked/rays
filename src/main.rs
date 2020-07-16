@@ -1,14 +1,16 @@
 // https://raytracing.github.io/books/RayTracingInOneWeekend.html
 
 mod camera;
+mod material;
 mod ppm;
 mod rand;
 mod ray;
 mod vec3;
 
 use camera::Camera;
+use material::{Lambertian, Material, Metal};
 use rand::Rand;
-use ray::{Lambertian, Material, Metal, Sphere, Surface};
+use ray::{Sphere, Surface};
 use vec3::Vec3;
 
 use std::cell::RefCell;
