@@ -8,7 +8,7 @@ mod vec3;
 
 use camera::Camera;
 use rand::Rand;
-use ray::{Lambertian, Material, Sphere, Surface};
+use ray::{Lambertian, Material, Metal, Sphere, Surface};
 use vec3::Vec3;
 
 use std::cell::RefCell;
@@ -44,6 +44,24 @@ fn main() -> io::Result<()> {
             }),
             Box::new(Lambertian {
                 albedo: Vec3::new(0.8, 0.8, 0.0),
+            }),
+        ),
+        (
+            Box::new(Sphere {
+                center: Vec3::new(1.0, 0.0, -1.0),
+                radius: 0.5,
+            }),
+            Box::new(Metal {
+                albedo: Vec3::new(0.8, 0.6, 0.2),
+            }),
+        ),
+        (
+            Box::new(Sphere {
+                center: Vec3::new(-1.0, 0.0, -1.0),
+                radius: 0.5,
+            }),
+            Box::new(Metal {
+                albedo: Vec3::new(0.8, 0.8, 0.8),
             }),
         ),
     ];

@@ -89,6 +89,32 @@ impl Material for Lambertian {
     }
 }
 
+pub struct Metal {
+    pub albedo: Vec3,
+}
+
+impl Material for Metal {
+    fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord) -> Option<(Vec3, Ray)> {
+        fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+            *v - 2.0 * v.dot(&n) * (*n)
+        }
+
+        match hit_record.normal {
+            Normal::FrontFace(normal) | Normal::BackFace(normal) => {
+                let reflected = reflect(&ray_in.direction.unit_vector(), &normal);
+                let scattered = Ray::new(hit_record.p, reflected);
+                let attenuation = self.albedo;
+
+                if scattered.direction.dot(&normal) > 0.0 {
+                    Some((attenuation, scattered))
+                } else {
+                    None
+                }
+            }
+        }
+    }
+}
+
 impl Surface for Sphere {
     fn hit<'a>(
         &self,
