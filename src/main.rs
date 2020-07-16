@@ -5,12 +5,13 @@ mod material;
 mod ppm;
 mod rand;
 mod ray;
+mod surface;
 mod vec3;
 
 use camera::Camera;
 use material::{Lambertian, Material, Metal};
 use rand::Rand;
-use ray::{Sphere, Surface};
+use surface::{Sphere, Surface};
 use vec3::Vec3;
 
 use std::cell::RefCell;
