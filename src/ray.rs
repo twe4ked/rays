@@ -36,23 +36,6 @@ impl<'a> HitRecord<'a> {
             material,
         }
     }
-
-    fn from_world(ray: &Ray, world: &'a [(Box<dyn Surface>, Box<dyn Material>)]) -> Option<Self> {
-        let t_min = 0.001;
-        let t_max = f32::INFINITY;
-
-        let mut closest_so_far = t_max;
-        let mut hit_record = None;
-
-        for (surface, material) in world {
-            if let Some(hr) = surface.hit(ray, t_min, closest_so_far, material) {
-                closest_so_far = hr.t;
-                hit_record = Some(hr);
-            }
-        }
-
-        hit_record
-    }
 }
 
 pub struct Ray {
@@ -74,7 +57,7 @@ impl Ray {
             return Vec3::new(0.0, 0.0, 0.0);
         }
 
-        if let Some(hit_record) = HitRecord::from_world(self, &world) {
+        if let Some(hit_record) = self.hit_record_from_world(&world) {
             if let Some((attenuation, scattered)) = hit_record.material.scatter(self, &hit_record) {
                 attenuation * scattered.color(&world, depth - 1)
             } else {
@@ -85,5 +68,25 @@ impl Ray {
             let t = 0.5 * (unit_direction.y + 1.0);
             (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * Vec3::new(0.5, 0.7, 1.0)
         }
+    }
+
+    fn hit_record_from_world<'a>(
+        &self,
+        world: &'a [(Box<dyn Surface>, Box<dyn Material>)],
+    ) -> Option<HitRecord<'a>> {
+        let t_min = 0.001;
+        let t_max = f32::INFINITY;
+
+        let mut closest_so_far = t_max;
+        let mut hit_record = None;
+
+        for (surface, material) in world {
+            if let Some(hr) = surface.hit(self, t_min, closest_so_far, material) {
+                closest_so_far = hr.t;
+                hit_record = Some(hr);
+            }
+        }
+
+        hit_record
     }
 }
