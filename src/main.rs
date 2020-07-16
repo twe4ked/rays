@@ -51,18 +51,14 @@ fn main() -> io::Result<()> {
                 center: Vec3::new(1.0, 0.0, -1.0),
                 radius: 0.5,
             }),
-            Box::new(Metal {
-                albedo: Vec3::new(0.8, 0.6, 0.2),
-            }),
+            Box::new(Metal::new(Vec3::new(0.8, 0.6, 0.2), 0.3)),
         ),
         (
             Box::new(Sphere {
                 center: Vec3::new(-1.0, 0.0, -1.0),
                 radius: 0.5,
             }),
-            Box::new(Metal {
-                albedo: Vec3::new(0.8, 0.8, 0.8),
-            }),
+            Box::new(Metal::new(Vec3::new(0.8, 0.8, 0.8), 1.0)),
         ),
     ];
 
