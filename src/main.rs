@@ -8,7 +8,7 @@ mod vec3;
 
 use camera::Camera;
 use rand::Rand;
-use ray::{Sphere, Surface};
+use ray::{Lambertian, Material, Sphere, Surface};
 use vec3::Vec3;
 
 use std::cell::RefCell;
@@ -27,15 +27,25 @@ fn main() -> io::Result<()> {
         camera.image_height as _,
     )?;
 
-    let world: Vec<Box<dyn Surface>> = vec![
-        Box::new(Sphere {
-            center: Vec3::new(0.0, 0.0, -1.0),
-            radius: 0.5,
-        }),
-        Box::new(Sphere {
-            center: Vec3::new(0.0, -100.5, -1.0),
-            radius: 100.0,
-        }),
+    let world: Vec<(Box<dyn Surface>, Box<dyn Material>)> = vec![
+        (
+            Box::new(Sphere {
+                center: Vec3::new(0.0, 0.0, -1.0),
+                radius: 0.5,
+            }),
+            Box::new(Lambertian {
+                albedo: Vec3::new(0.7, 0.3, 0.3),
+            }),
+        ),
+        (
+            Box::new(Sphere {
+                center: Vec3::new(0.0, -100.5, -1.0),
+                radius: 100.0,
+            }),
+            Box::new(Lambertian {
+                albedo: Vec3::new(0.8, 0.8, 0.0),
+            }),
+        ),
     ];
 
     let samples_per_pixel = 100;

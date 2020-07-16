@@ -5,14 +5,21 @@ enum Normal {
     BackFace(Vec3),
 }
 
-pub struct HitRecord {
+pub struct HitRecord<'a> {
     p: Vec3,
     normal: Normal,
+    material: &'a Box<dyn Material>,
     t: f32,
 }
 
-impl HitRecord {
-    fn new(t: f32, p: Vec3, ray: &Ray, outward_normal: Vec3) -> Self {
+impl<'a> HitRecord<'a> {
+    fn new(
+        t: f32,
+        p: Vec3,
+        ray: &Ray,
+        outward_normal: Vec3,
+        material: &'a Box<dyn Material>,
+    ) -> Self {
         let front_face = ray.direction.dot(&outward_normal) < 0.0;
         let normal = if front_face {
             Normal::FrontFace(outward_normal)
@@ -20,18 +27,23 @@ impl HitRecord {
             Normal::BackFace(-outward_normal)
         };
 
-        Self { p, normal, t }
+        Self {
+            p,
+            normal,
+            t,
+            material,
+        }
     }
 
-    fn from_world(ray: &Ray, world: &[Box<dyn Surface>]) -> Option<Self> {
+    fn from_world(ray: &Ray, world: &'a [(Box<dyn Surface>, Box<dyn Material>)]) -> Option<Self> {
         let t_min = 0.001;
         let t_max = f32::INFINITY;
 
         let mut closest_so_far = t_max;
         let mut hit_record = None;
 
-        for surface in world {
-            if let Some(hr) = surface.hit(ray, t_min, closest_so_far) {
+        for (surface, material) in world {
+            if let Some(hr) = surface.hit(ray, t_min, closest_so_far, material) {
                 closest_so_far = hr.t;
                 hit_record = Some(hr);
             }
@@ -47,17 +59,50 @@ pub struct Sphere {
 }
 
 pub trait Surface {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord>;
+    fn hit<'a>(
+        &self,
+        ray: &Ray,
+        t_min: f32,
+        t_max: f32,
+        material: &'a Box<dyn Material>,
+    ) -> Option<HitRecord<'a>>;
+}
+
+pub trait Material {
+    fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord) -> Option<(Vec3, Ray)>;
+}
+
+pub struct Lambertian {
+    pub albedo: Vec3,
+}
+
+impl Material for Lambertian {
+    fn scatter(&self, _ray_in: &Ray, hit_record: &HitRecord) -> Option<(Vec3, Ray)> {
+        let normal = match hit_record.normal {
+            Normal::FrontFace(normal) | Normal::BackFace(normal) => normal,
+        };
+        let scatter_direction = normal + random_unit_vec3();
+        let scattered = Ray::new(hit_record.p, scatter_direction);
+        let attenuation = self.albedo;
+
+        Some((attenuation, scattered))
+    }
 }
 
 impl Surface for Sphere {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
+    fn hit<'a>(
+        &self,
+        ray: &Ray,
+        t_min: f32,
+        t_max: f32,
+        material: &'a Box<dyn Material>,
+    ) -> Option<HitRecord<'a>> {
         let oc = ray.origin - self.center;
         let a = ray.direction.length_squared();
         let half_b = oc.dot(&ray.direction);
         let c = oc.length_squared() - self.radius * self.radius;
 
-        let hit_record_for_root = |root: f32| -> Option<HitRecord> {
+        let hit_record_for_root = |root| {
             let temp = (-half_b + root) / a;
 
             if temp < t_max && temp > t_min {
@@ -65,7 +110,7 @@ impl Surface for Sphere {
                 let p = ray.at(t);
                 let outward_normal = (p - self.center) / self.radius;
 
-                Some(HitRecord::new(t, p, ray, outward_normal))
+                Some(HitRecord::new(t, p, ray, outward_normal, material))
             } else {
                 None
             }
@@ -135,18 +180,16 @@ impl Ray {
         self.origin + (t * self.direction)
     }
 
-    pub fn color(&self, world: &[Box<dyn Surface>], depth: usize) -> Vec3 {
+    pub fn color(&self, world: &[(Box<dyn Surface>, Box<dyn Material>)], depth: usize) -> Vec3 {
         if depth == 0 {
             return Vec3::new(0.0, 0.0, 0.0);
         }
 
         if let Some(hit_record) = HitRecord::from_world(self, &world) {
-            match hit_record.normal {
-                Normal::FrontFace(normal) | Normal::BackFace(normal) => {
-                    let target = hit_record.p + normal + random_unit_vec3();
-                    // let target = hit_record.p + random_in_hemisphere(&normal);
-                    0.5 * Ray::new(hit_record.p, target - hit_record.p).color(world, depth - 1)
-                }
+            if let Some((attenuation, scattered)) = hit_record.material.scatter(self, &hit_record) {
+                attenuation * scattered.color(&world, depth - 1)
+            } else {
+                Vec3::new(0.0, 0.0, 0.0)
             }
         } else {
             let unit_direction = self.direction.unit_vector();

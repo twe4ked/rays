@@ -34,6 +34,18 @@ impl Vec3 {
     }
 }
 
+impl Mul<Vec3> for Vec3 {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self {
+        Self {
+            x: self.x * rhs.x,
+            y: self.y * rhs.y,
+            z: self.z * rhs.z,
+        }
+    }
+}
+
 impl Mul<f32> for Vec3 {
     type Output = Vec3;
 
