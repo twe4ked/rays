@@ -43,10 +43,6 @@ impl Metal {
 
 impl Material for Metal {
     fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord) -> Option<(Vec3, Ray)> {
-        fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
-            *v - 2.0 * v.dot(&n) * (*n)
-        }
-
         match hit_record.normal {
             Normal::FrontFace(normal) | Normal::BackFace(normal) => {
                 let reflected = reflect(&ray_in.direction.unit_vector(), &normal);
@@ -62,6 +58,57 @@ impl Material for Metal {
                     None
                 }
             }
+        }
+    }
+}
+
+pub struct Dielectric {
+    ref_idx: f32,
+}
+
+impl Dielectric {
+    pub fn new(ref_idx: f32) -> Self {
+        Self { ref_idx }
+    }
+}
+
+impl Material for Dielectric {
+    fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord) -> Option<(Vec3, Ray)> {
+        fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f32) -> Vec3 {
+            let cos_theta = -uv.dot(n);
+            let r_out_parallel = etai_over_etat * (*uv + cos_theta * *n);
+            let r_out_perp = -(1.0 - r_out_parallel.length_squared()).sqrt() * *n;
+            r_out_parallel + r_out_perp
+        }
+
+        let (normal, front_face) = match hit_record.normal {
+            Normal::FrontFace(normal) => (normal, true),
+            Normal::BackFace(normal) => (normal, false),
+        };
+
+        let attenuation = Vec3::new(1.0, 1.0, 1.0);
+        let etai_over_etat = if front_face {
+            1.0 / self.ref_idx
+        } else {
+            self.ref_idx
+        };
+
+        let unit_direction = ray_in.direction.unit_vector();
+
+        let cos_theta = f32::min(-unit_direction.dot(&normal), 1.0);
+        let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
+
+        let rand_f32 = || crate::RAND.with(|r| r.borrow_mut().next_f32());
+        let reflect_prob = schlick(cos_theta, etai_over_etat);
+
+        if etai_over_etat * sin_theta > 1.0 || rand_f32() < reflect_prob {
+            let reflected = reflect(&unit_direction, &normal);
+            let scattered = Ray::new(hit_record.p, reflected);
+            Some((attenuation, scattered))
+        } else {
+            let refracted = refract(&unit_direction, &normal, etai_over_etat);
+            let scattered = Ray::new(hit_record.p, refracted);
+            Some((attenuation, scattered))
         }
     }
 }
@@ -102,4 +149,15 @@ fn random_in_hemisphere(normal: &Vec3) -> Vec3 {
     } else {
         -in_unit_sphere
     }
+}
+
+fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+    *v - 2.0 * v.dot(&n) * (*n)
+}
+
+// Schlick approximation
+fn schlick(cosine: f32, ref_idx: f32) -> f32 {
+    let mut r0 = (1.0 - ref_idx) / (1.0 + ref_idx);
+    r0 = r0 * r0;
+    r0 + (1.0 - r0) * (1.0 - cosine).powf(5.0)
 }
