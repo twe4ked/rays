@@ -20,15 +20,13 @@ use std::io;
 thread_local! { static RAND: RefCell<Rand> = RefCell::new(Rand::new_from_time()); }
 
 fn main() -> io::Result<()> {
-    let camera = Camera::new();
+    let image_width = 384;
+    let image_height = 216;
+    let camera = Camera::new(90.0, image_width as f32 / image_height as f32);
 
     let mut stdout = io::stdout();
 
-    ppm::write_header(
-        &mut stdout,
-        camera.image_width as _,
-        camera.image_height as _,
-    )?;
+    ppm::write_header(&mut stdout, image_width, image_height)?;
 
     let world: Vec<(Box<dyn Surface>, Box<dyn Material>)> = vec![
         (
@@ -58,15 +56,15 @@ fn main() -> io::Result<()> {
 
     let rand = || crate::RAND.with(|r| r.borrow_mut().next_f32());
 
-    for j in (0..(camera.image_height as usize)).rev() {
+    for j in (0..image_height as usize).rev() {
         eprint!(".");
 
-        for i in 0..(camera.image_width as usize) {
+        for i in 0..image_width as usize {
             let mut color = Vec3::new(0.0, 0.0, 0.0);
 
             for _ in 0..samples_per_pixel {
-                let u = (i as f32 + rand()) / (camera.image_width - 1.0);
-                let v = (j as f32 + rand()) / (camera.image_height - 1.0);
+                let u = (i as f32 + rand()) / (image_width as f32 - 1.0);
+                let v = (j as f32 + rand()) / (image_height as f32 - 1.0);
                 let ray = camera.get_ray(u, v);
                 color = color + ray.color(&world, max_depth);
             }
