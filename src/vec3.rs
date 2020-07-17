@@ -32,6 +32,15 @@ impl Vec3 {
     pub fn dot(&self, other: &Self) -> f32 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
+
+    pub fn cross(&self, v: &Self) -> Self {
+        let u = self;
+        Self::new(
+            u.y * v.z - u.z * v.y,
+            u.z * v.x - u.x * v.z,
+            u.x * v.y - u.y * v.x,
+        )
+    }
 }
 
 impl Mul<Vec3> for Vec3 {
