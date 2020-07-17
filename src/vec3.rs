@@ -17,7 +17,7 @@ impl Vec3 {
         Self::new(rand(), rand(), rand())
     }
 
-    fn length(&self) -> f32 {
+    pub fn length(&self) -> f32 {
         self.length_squared().sqrt()
     }
 

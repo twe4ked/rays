@@ -22,14 +22,25 @@ thread_local! { static RAND: RefCell<Rand> = RefCell::new(Rand::new_from_time())
 fn main() -> io::Result<()> {
     let image_width = 384;
     let image_height = 216;
-    let aspect_ratio = image_width as f32 / image_height as f32;
-    let camera = Camera::new(
-        Vec3::new(-2.0, 2.0, 1.0),
-        Vec3::new(0.0, 0.0, -1.0),
-        Vec3::new(0.0, 1.0, 0.0),
-        20.0,
-        aspect_ratio,
-    );
+    let camera = {
+        let aspect_ratio = image_width as f32 / image_height as f32;
+        let look_from = Vec3::new(3.0, 3.0, 2.0);
+        let look_at = Vec3::new(0.0, 0.0, -1.0);
+        let v_up = Vec3::new(0.0, 1.0, 0.0);
+
+        let focus_dist = (look_from - look_at).length();
+        let aperture = 2.0;
+
+        Camera::new(
+            look_from,
+            look_at,
+            v_up,
+            20.0,
+            aspect_ratio,
+            aperture,
+            focus_dist,
+        )
+    };
 
     let mut stdout = io::stdout();
 
