@@ -9,6 +9,12 @@ pub struct Lambertian {
     pub albedo: Vec3,
 }
 
+impl Lambertian {
+    pub fn new(albedo: Vec3) -> Self {
+        Self { albedo }
+    }
+}
+
 impl Material for Lambertian {
     fn scatter(&self, _ray_in: &Ray, hit_record: &HitRecord) -> Option<(Vec3, Ray)> {
         let normal = match hit_record.normal {
