@@ -1,4 +1,3 @@
-use crate::material::Material;
 use crate::vec3::Vec3;
 use crate::world::World;
 
@@ -46,7 +45,21 @@ impl Ray {
             return Vec3::new(0.0, 0.0, 0.0);
         }
 
-        if let Some((hit_record, material)) = self.hit_record_from_world(&world) {
+        let mut ret = None;
+        {
+            let t_min = 0.001;
+            let t_max = f32::INFINITY;
+            let mut closest_so_far = t_max;
+
+            for (surface, material) in &world.objects {
+                if let Some(hit_record) = surface.hit(self, t_min, closest_so_far) {
+                    closest_so_far = hit_record.t;
+                    ret = Some((hit_record, material));
+                }
+            }
+        }
+
+        if let Some((hit_record, material)) = ret {
             if let Some((attenuation, scattered)) = material.scatter(self, &hit_record) {
                 attenuation * scattered.color(&world, depth - 1)
             } else {
@@ -57,25 +70,5 @@ impl Ray {
             let t = 0.5 * (unit_direction.y + 1.0);
             (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * Vec3::new(0.5, 0.7, 1.0)
         }
-    }
-
-    fn hit_record_from_world<'a>(
-        &self,
-        world: &'a World,
-    ) -> Option<(HitRecord, &'a Box<dyn Material>)> {
-        let t_min = 0.001;
-        let t_max = f32::INFINITY;
-
-        let mut closest_so_far = t_max;
-        let mut ret = None;
-
-        for (surface, material) in &world.objects {
-            if let Some(hit_record) = surface.hit(self, t_min, closest_so_far) {
-                closest_so_far = hit_record.t;
-                ret = Some((hit_record, material));
-            }
-        }
-
-        ret
     }
 }
