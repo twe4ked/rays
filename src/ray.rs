@@ -1,8 +1,6 @@
 use crate::material::Material;
-use crate::surface::Surface;
 use crate::vec3::Vec3;
-
-type World = [(Box<dyn Surface>, Box<dyn Material>)];
+use crate::world::World;
 
 pub enum Face {
     Front,
@@ -81,8 +79,8 @@ impl Ray {
         let mut closest_so_far = t_max;
         let mut hit_record = None;
 
-        for (surface, material) in world {
-            if let Some(hr) = surface.hit(self, t_min, closest_so_far, material) {
+        for (surface, material) in &world.objects {
+            if let Some(hr) = surface.hit(self, t_min, closest_so_far, &material) {
                 closest_so_far = hr.t;
                 hit_record = Some(hr);
             }
