@@ -42,6 +42,8 @@ fn main() -> io::Result<()> {
 
     let mut stdout = io::stdout();
 
+    eprintln!("Writing image: {}x{}px", image_width, image_height);
+
     ppm::write_header(&mut stdout, image_width, image_height)?;
 
     let world = random_scene();
