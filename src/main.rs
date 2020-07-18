@@ -82,7 +82,7 @@ fn random_scene() -> World {
     let mut world = World::new();
 
     let ground_material = Lambertian::new(Vec3::new(0.5, 0.5, 0.5));
-    world.push(
+    world.add(
         Box::new(Sphere::new(Vec3::new(0.0, -1000.0, 0.0), 1000.0)),
         Box::new(ground_material),
     );
@@ -96,7 +96,7 @@ fn random_scene() -> World {
                 if choose_material < 0.8 {
                     // Diffuse
                     let albedo = Vec3::random(0.0, 1.0) * Vec3::random(0.0, 1.0);
-                    world.push(
+                    world.add(
                         Box::new(Sphere::new(center, 0.2)),
                         Box::new(Lambertian::new(albedo)),
                     );
@@ -104,13 +104,13 @@ fn random_scene() -> World {
                     // Metal
                     let albedo = Vec3::random(0.5, 1.0);
                     let fuzz = rand_between(0.0, 0.5);
-                    world.push(
+                    world.add(
                         Box::new(Sphere::new(center, 0.2)),
                         Box::new(Metal::new(albedo, fuzz)),
                     );
                 } else {
                     // Glass
-                    world.push(
+                    world.add(
                         Box::new(Sphere::new(center, 0.2)),
                         Box::new(Dielectric::new(1.5)),
                     );
@@ -119,17 +119,17 @@ fn random_scene() -> World {
         }
     }
 
-    world.push(
+    world.add(
         Box::new(Sphere::new(Vec3::new(0.0, 1.0, 0.0), 1.0)),
         Box::new(Dielectric::new(1.5)),
     );
 
-    world.push(
+    world.add(
         Box::new(Sphere::new(Vec3::new(-4.0, 1.0, 0.0), 1.0)),
         Box::new(Lambertian::new(Vec3::new(0.4, 0.2, 0.1))),
     );
 
-    world.push(
+    world.add(
         Box::new(Sphere::new(Vec3::new(4.0, 1.0, 0.0), 1.0)),
         Box::new(Metal::new(Vec3::new(0.7, 0.6, 0.5), 0.0)),
     );

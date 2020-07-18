@@ -12,7 +12,7 @@ impl World {
         }
     }
 
-    pub fn push(&mut self, surface: Box<dyn Surface>, material: Box<dyn Material>) {
+    pub fn add(&mut self, surface: Box<dyn Surface>, material: Box<dyn Material>) {
         self.objects.push((surface, material));
     }
 }
