@@ -1,5 +1,5 @@
 use crate::rand::{rand, rand_between};
-use crate::ray::{HitRecord, Normal, Ray};
+use crate::ray::{Face, HitRecord, Ray};
 use crate::vec3::Vec3;
 
 pub trait Material {
@@ -18,10 +18,7 @@ impl Lambertian {
 
 impl Material for Lambertian {
     fn scatter(&self, _ray_in: &Ray, hit_record: &HitRecord) -> Option<(Vec3, Ray)> {
-        let normal = match hit_record.normal {
-            Normal::FrontFace(normal) | Normal::BackFace(normal) => normal,
-        };
-        let scatter_direction = normal + random_unit_vec3();
+        let scatter_direction = hit_record.normal + random_unit_vec3();
         let scattered = Ray::new(hit_record.p, scatter_direction);
         let attenuation = self.albedo;
 
@@ -44,21 +41,17 @@ impl Metal {
 
 impl Material for Metal {
     fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord) -> Option<(Vec3, Ray)> {
-        match hit_record.normal {
-            Normal::FrontFace(normal) | Normal::BackFace(normal) => {
-                let reflected = reflect(&ray_in.direction.unit_vector(), &normal);
-                let scattered = Ray::new(
-                    hit_record.p,
-                    reflected + self.fuzz * random_in_unit_sphere(),
-                );
-                let attenuation = self.albedo;
+        let reflected = reflect(&ray_in.direction.unit_vector(), &hit_record.normal);
+        let scattered = Ray::new(
+            hit_record.p,
+            reflected + self.fuzz * random_in_unit_sphere(),
+        );
+        let attenuation = self.albedo;
 
-                if scattered.direction.dot(&normal) > 0.0 {
-                    Some((attenuation, scattered))
-                } else {
-                    None
-                }
-            }
+        if scattered.direction.dot(&hit_record.normal) > 0.0 {
+            Some((attenuation, scattered))
+        } else {
+            None
         }
     }
 }
@@ -82,31 +75,25 @@ impl Material for Dielectric {
             r_out_parallel + r_out_perp
         }
 
-        let (normal, front_face) = match hit_record.normal {
-            Normal::FrontFace(normal) => (normal, true),
-            Normal::BackFace(normal) => (normal, false),
-        };
-
         let attenuation = Vec3::new(1.0, 1.0, 1.0);
-        let etai_over_etat = if front_face {
-            1.0 / self.ref_idx
-        } else {
-            self.ref_idx
+        let etai_over_etat = match hit_record.face {
+            Face::Front => 1.0 / self.ref_idx,
+            Face::Back => self.ref_idx,
         };
 
         let unit_direction = ray_in.direction.unit_vector();
 
-        let cos_theta = f32::min(-unit_direction.dot(&normal), 1.0);
+        let cos_theta = f32::min(-unit_direction.dot(&hit_record.normal), 1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
 
         let reflect_prob = schlick(cos_theta, etai_over_etat);
 
         if etai_over_etat * sin_theta > 1.0 || rand() < reflect_prob {
-            let reflected = reflect(&unit_direction, &normal);
+            let reflected = reflect(&unit_direction, &hit_record.normal);
             let scattered = Ray::new(hit_record.p, reflected);
             Some((attenuation, scattered))
         } else {
-            let refracted = refract(&unit_direction, &normal, etai_over_etat);
+            let refracted = refract(&unit_direction, &hit_record.normal, etai_over_etat);
             let scattered = Ray::new(hit_record.p, refracted);
             Some((attenuation, scattered))
         }

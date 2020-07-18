@@ -4,16 +4,17 @@ use crate::vec3::Vec3;
 
 type World = [(Box<dyn Surface>, Box<dyn Material>)];
 
-pub enum Normal {
-    FrontFace(Vec3),
-    BackFace(Vec3),
+pub enum Face {
+    Front,
+    Back,
 }
 
 pub struct HitRecord<'a> {
     pub p: Vec3,
-    pub normal: Normal,
+    pub normal: Vec3,
     material: &'a Box<dyn Material>,
     t: f32,
+    pub face: Face,
 }
 
 impl<'a> HitRecord<'a> {
@@ -25,10 +26,10 @@ impl<'a> HitRecord<'a> {
         material: &'a Box<dyn Material>,
     ) -> Self {
         let front_face = ray.direction.dot(&outward_normal) < 0.0;
-        let normal = if front_face {
-            Normal::FrontFace(outward_normal)
+        let (face, normal) = if front_face {
+            (Face::Front, outward_normal)
         } else {
-            Normal::BackFace(-outward_normal)
+            (Face::Back, -outward_normal)
         };
 
         Self {
@@ -36,6 +37,7 @@ impl<'a> HitRecord<'a> {
             normal,
             t,
             material,
+            face,
         }
     }
 }
