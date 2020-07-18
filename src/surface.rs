@@ -1,4 +1,3 @@
-use crate::material::Material;
 use crate::ray::{HitRecord, Ray};
 use crate::vec3::Vec3;
 
@@ -14,23 +13,11 @@ impl Sphere {
 }
 
 pub trait Surface {
-    fn hit<'a>(
-        &self,
-        ray: &Ray,
-        t_min: f32,
-        t_max: f32,
-        material: &'a Box<dyn Material>,
-    ) -> Option<HitRecord<'a>>;
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord>;
 }
 
 impl Surface for Sphere {
-    fn hit<'a>(
-        &self,
-        ray: &Ray,
-        t_min: f32,
-        t_max: f32,
-        material: &'a Box<dyn Material>,
-    ) -> Option<HitRecord<'a>> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let oc = ray.origin - self.center;
         let a = ray.direction.length_squared();
         let half_b = oc.dot(&ray.direction);
@@ -44,7 +31,7 @@ impl Surface for Sphere {
                 let p = ray.at(t);
                 let outward_normal = (p - self.center) / self.radius;
 
-                Some(HitRecord::new(t, p, ray, outward_normal, material))
+                Some(HitRecord::new(t, p, ray, outward_normal))
             } else {
                 None
             }

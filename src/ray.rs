@@ -7,22 +7,15 @@ pub enum Face {
     Back,
 }
 
-pub struct HitRecord<'a> {
+pub struct HitRecord {
     pub p: Vec3,
     pub normal: Vec3,
-    material: &'a Box<dyn Material>,
     t: f32,
     pub face: Face,
 }
 
-impl<'a> HitRecord<'a> {
-    pub fn new(
-        t: f32,
-        p: Vec3,
-        ray: &Ray,
-        outward_normal: Vec3,
-        material: &'a Box<dyn Material>,
-    ) -> Self {
+impl HitRecord {
+    pub fn new(t: f32, p: Vec3, ray: &Ray, outward_normal: Vec3) -> Self {
         let front_face = ray.direction.dot(&outward_normal) < 0.0;
         let (face, normal) = if front_face {
             (Face::Front, outward_normal)
@@ -30,13 +23,7 @@ impl<'a> HitRecord<'a> {
             (Face::Back, -outward_normal)
         };
 
-        Self {
-            p,
-            normal,
-            t,
-            material,
-            face,
-        }
+        Self { p, normal, t, face }
     }
 }
 
@@ -59,8 +46,8 @@ impl Ray {
             return Vec3::new(0.0, 0.0, 0.0);
         }
 
-        if let Some(hit_record) = self.hit_record_from_world(&world) {
-            if let Some((attenuation, scattered)) = hit_record.material.scatter(self, &hit_record) {
+        if let Some((hit_record, material)) = self.hit_record_from_world(&world) {
+            if let Some((attenuation, scattered)) = material.scatter(self, &hit_record) {
                 attenuation * scattered.color(&world, depth - 1)
             } else {
                 Vec3::new(0.0, 0.0, 0.0)
@@ -72,20 +59,23 @@ impl Ray {
         }
     }
 
-    fn hit_record_from_world<'a>(&self, world: &'a World) -> Option<HitRecord<'a>> {
+    fn hit_record_from_world<'a>(
+        &self,
+        world: &'a World,
+    ) -> Option<(HitRecord, &'a Box<dyn Material>)> {
         let t_min = 0.001;
         let t_max = f32::INFINITY;
 
         let mut closest_so_far = t_max;
-        let mut hit_record = None;
+        let mut ret = None;
 
         for (surface, material) in &world.objects {
-            if let Some(hr) = surface.hit(self, t_min, closest_so_far, &material) {
-                closest_so_far = hr.t;
-                hit_record = Some(hr);
+            if let Some(hit_record) = surface.hit(self, t_min, closest_so_far) {
+                closest_so_far = hit_record.t;
+                ret = Some((hit_record, material));
             }
         }
 
-        hit_record
+        ret
     }
 }
