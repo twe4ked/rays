@@ -79,11 +79,6 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-// (
-//     Box::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)),
-//     Box::new(Lambertian::new(Vec3::new(0.1, 0.2, 0.5))),
-// ),
-
 fn random_scene() -> Vec<(Box<dyn Surface>, Box<dyn Material>)> {
     let mut world: Vec<(Box<dyn Surface>, Box<dyn Material>)> = Vec::new();
 
