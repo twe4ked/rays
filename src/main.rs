@@ -7,12 +7,14 @@ mod rand;
 mod ray;
 mod surface;
 mod vec3;
+mod world;
 
 use camera::Camera;
-use material::{Dielectric, Lambertian, Material, Metal};
+use material::{Dielectric, Lambertian, Metal};
 use rand::{rand, rand_between};
-use surface::{Sphere, Surface};
+use surface::Sphere;
 use vec3::Vec3;
+use world::World;
 
 use std::io;
 
@@ -61,7 +63,7 @@ fn main() -> io::Result<()> {
                 let u = (i as f32 + rand()) / (image_width as f32 - 1.0);
                 let v = (j as f32 + rand()) / (image_height as f32 - 1.0);
                 let ray = camera.get_ray(u, v);
-                color = color + ray.color(&world, max_depth);
+                color = color + ray.color(&world.objects, max_depth);
             }
 
             color = translate_color(&color, samples_per_pixel as _);
@@ -76,11 +78,11 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn random_scene() -> Vec<(Box<dyn Surface>, Box<dyn Material>)> {
-    let mut world: Vec<(Box<dyn Surface>, Box<dyn Material>)> = Vec::new();
+fn random_scene() -> World {
+    let mut world = World::new();
 
     let ground_material = Lambertian::new(Vec3::new(0.5, 0.5, 0.5));
-    world.push((
+    world.objects.push((
         Box::new(Sphere::new(Vec3::new(0.0, -1000.0, 0.0), 1000.0)),
         Box::new(ground_material),
     ));
@@ -94,7 +96,7 @@ fn random_scene() -> Vec<(Box<dyn Surface>, Box<dyn Material>)> {
                 if choose_material < 0.8 {
                     // Diffuse
                     let albedo = Vec3::random(0.0, 1.0) * Vec3::random(0.0, 1.0);
-                    world.push((
+                    world.objects.push((
                         Box::new(Sphere::new(center, 0.2)),
                         Box::new(Lambertian::new(albedo)),
                     ));
@@ -102,13 +104,13 @@ fn random_scene() -> Vec<(Box<dyn Surface>, Box<dyn Material>)> {
                     // Metal
                     let albedo = Vec3::random(0.5, 1.0);
                     let fuzz = rand_between(0.0, 0.5);
-                    world.push((
+                    world.objects.push((
                         Box::new(Sphere::new(center, 0.2)),
                         Box::new(Metal::new(albedo, fuzz)),
                     ));
                 } else {
                     // Glass
-                    world.push((
+                    world.objects.push((
                         Box::new(Sphere::new(center, 0.2)),
                         Box::new(Dielectric::new(1.5)),
                     ));
@@ -117,17 +119,17 @@ fn random_scene() -> Vec<(Box<dyn Surface>, Box<dyn Material>)> {
         }
     }
 
-    world.push((
+    world.objects.push((
         Box::new(Sphere::new(Vec3::new(0.0, 1.0, 0.0), 1.0)),
         Box::new(Dielectric::new(1.5)),
     ));
 
-    world.push((
+    world.objects.push((
         Box::new(Sphere::new(Vec3::new(-4.0, 1.0, 0.0), 1.0)),
         Box::new(Lambertian::new(Vec3::new(0.4, 0.2, 0.1))),
     ));
 
-    world.push((
+    world.objects.push((
         Box::new(Sphere::new(Vec3::new(4.0, 1.0, 0.0), 1.0)),
         Box::new(Metal::new(Vec3::new(0.7, 0.6, 0.5), 0.0)),
     ));
