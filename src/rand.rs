@@ -48,7 +48,7 @@ impl Rand {
     }
 
     pub fn next_f32(&mut self) -> f32 {
-        (self.next() as f64 / u32::MAX as f64) as _
+        self.next() as f32 / u32::MAX as f32
     }
 
     pub fn next_between_f32(&mut self, min: f32, max: f32) -> f32 {
