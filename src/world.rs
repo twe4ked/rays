@@ -11,4 +11,8 @@ impl World {
             objects: Vec::new(),
         }
     }
+
+    pub fn push(&mut self, surface: Box<dyn Surface>, material: Box<dyn Material>) {
+        self.objects.push((surface, material));
+    }
 }
