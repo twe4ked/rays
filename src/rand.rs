@@ -1,6 +1,9 @@
 // https://burtleburtle.net/bob/rand/smallprng.html
 
+use std::cell::RefCell;
 use std::num::Wrapping;
+
+thread_local! { static RAND: RefCell<Rand> = RefCell::new(Rand::new_from_time()); }
 
 #[derive(Copy, Clone)]
 pub struct Rand {
@@ -51,6 +54,14 @@ impl Rand {
     pub fn next_between_f32(&mut self, min: f32, max: f32) -> f32 {
         min + (max - min) * self.next_f32()
     }
+}
+
+pub fn rand() -> f32 {
+    RAND.with(|r| r.borrow_mut().next_f32())
+}
+
+pub fn rand_between(min: f32, max: f32) -> f32 {
+    RAND.with(|r| r.borrow_mut().next_between_f32(min, max))
 }
 
 #[cfg(test)]

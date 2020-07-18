@@ -10,14 +10,11 @@ mod vec3;
 
 use camera::Camera;
 use material::{Dielectric, Lambertian, Material, Metal};
-use rand::Rand;
+use rand::{rand, rand_between};
 use surface::{Sphere, Surface};
 use vec3::Vec3;
 
-use std::cell::RefCell;
 use std::io;
-
-thread_local! { static RAND: RefCell<Rand> = RefCell::new(Rand::new_from_time()); }
 
 fn main() -> io::Result<()> {
     let aspect_ratio = 16.0 / 9.0;
@@ -52,8 +49,6 @@ fn main() -> io::Result<()> {
     let samples_per_pixel = 100;
     let max_depth = 50;
 
-    let rand = || crate::RAND.with(|r| r.borrow_mut().next_f32());
-
     for j in (0..image_height as usize).rev() {
         eprint!(".");
 
@@ -87,9 +82,6 @@ fn random_scene() -> Vec<(Box<dyn Surface>, Box<dyn Material>)> {
         Box::new(Sphere::new(Vec3::new(0.0, -1000.0, 0.0), 1000.0)),
         Box::new(ground_material),
     ));
-
-    let rand = || crate::RAND.with(|r| r.borrow_mut().next_f32());
-    let rand_between = |min, max| crate::RAND.with(|r| r.borrow_mut().next_between_f32(min, max));
 
     for a in -11..11 {
         for b in -11..11 {

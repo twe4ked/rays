@@ -1,5 +1,7 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
+use crate::rand::rand_between;
+
 #[derive(Copy, Clone)]
 pub struct Vec3 {
     pub x: f32,
@@ -13,7 +15,7 @@ impl Vec3 {
     }
 
     pub fn random(min: f32, max: f32) -> Self {
-        let rand = || crate::RAND.with(|r| min + (max - min) * r.borrow_mut().next_f32());
+        let rand = || rand_between(min, max);
         Self::new(rand(), rand(), rand())
     }
 

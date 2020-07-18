@@ -1,3 +1,4 @@
+use crate::rand::{rand, rand_between};
 use crate::ray::{HitRecord, Normal, Ray};
 use crate::vec3::Vec3;
 
@@ -98,10 +99,9 @@ impl Material for Dielectric {
         let cos_theta = f32::min(-unit_direction.dot(&normal), 1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
 
-        let rand_f32 = || crate::RAND.with(|r| r.borrow_mut().next_f32());
         let reflect_prob = schlick(cos_theta, etai_over_etat);
 
-        if etai_over_etat * sin_theta > 1.0 || rand_f32() < reflect_prob {
+        if etai_over_etat * sin_theta > 1.0 || rand() < reflect_prob {
             let reflected = reflect(&unit_direction, &normal);
             let scattered = Ray::new(hit_record.p, reflected);
             Some((attenuation, scattered))
@@ -125,10 +125,8 @@ fn random_in_unit_sphere() -> Vec3 {
 
 // Lambertian distribution
 fn random_unit_vec3() -> Vec3 {
-    let rand = |min, max| crate::RAND.with(|r| r.borrow_mut().next_between_f32(min, max));
-
-    let a = rand(0.0, 2.0 * std::f32::consts::PI);
-    let z = rand(-1.0, 1.0);
+    let a = rand_between(0.0, 2.0 * std::f32::consts::PI);
+    let z = rand_between(-1.0, 1.0);
     let r = (1.0 - z * z).sqrt();
 
     Vec3 {

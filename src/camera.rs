@@ -1,3 +1,4 @@
+use crate::rand::rand_between;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 
@@ -61,7 +62,7 @@ impl Camera {
 }
 
 fn random_in_unit_disk() -> Vec3 {
-    let rand = || crate::RAND.with(|r| r.borrow_mut().next_between_f32(-1.0, 1.0));
+    let rand = || rand_between(-1.0, 1.0);
 
     loop {
         let p = Vec3::new(rand(), rand(), 0.0);
