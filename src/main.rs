@@ -53,7 +53,7 @@ fn main() -> io::Result<()> {
     let samples_per_pixel = 100;
     let max_depth = 50;
 
-    for j in 0..image_height as usize {
+    for j in 0..image_height {
         if j % 100 == 0 {
             eprint!(
                 "\n{: >width$}/{} ",
@@ -65,7 +65,7 @@ fn main() -> io::Result<()> {
         eprint!(".");
 
         let j = image_height - 1 - j;
-        for i in 0..image_width as usize {
+        for i in 0..image_width {
             let mut color = Vec3::new(0.0, 0.0, 0.0);
 
             for _ in 0..samples_per_pixel {
