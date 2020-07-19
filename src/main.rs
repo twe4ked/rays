@@ -53,9 +53,10 @@ fn main() -> io::Result<()> {
     let samples_per_pixel = 100;
     let max_depth = 50;
 
-    for j in (0..image_height as usize).rev() {
+    for j in 0..image_height as usize {
         eprint!(".");
 
+        let j = image_height - 1 - j;
         for i in 0..image_width as usize {
             let mut color = Vec3::new(0.0, 0.0, 0.0);
 
