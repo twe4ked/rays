@@ -2,7 +2,7 @@ use crate::material::Material;
 use crate::surface::Surface;
 
 pub struct World {
-    pub objects: Vec<(Box<dyn Surface>, Box<dyn Material>)>,
+    pub objects: Vec<(Box<dyn Surface + Sync>, Box<dyn Material + Sync>)>,
 }
 
 impl World {
@@ -12,7 +12,7 @@ impl World {
         }
     }
 
-    pub fn add(&mut self, surface: Box<dyn Surface>, material: Box<dyn Material>) {
+    pub fn add(&mut self, surface: Box<dyn Surface + Sync>, material: Box<dyn Material + Sync>) {
         self.objects.push((surface, material));
     }
 }

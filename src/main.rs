@@ -18,6 +18,8 @@ use world::World;
 
 use std::io;
 
+use rayon::prelude::*;
+
 fn main() -> io::Result<()> {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 1200;
@@ -42,46 +44,56 @@ fn main() -> io::Result<()> {
         )
     };
 
-    let mut stdout = io::stdout();
-
-    eprintln!("Writing image: {}x{}px", image_width, image_height);
-
-    ppm::write_header(&mut stdout, image_width, image_height)?;
+    eprintln!("Rendering image: {}x{}px...", image_width, image_height);
 
     let world = random_scene();
 
     let samples_per_pixel = 100;
     let max_depth = 50;
 
-    for j in 0..image_height {
-        if j % 100 == 0 {
-            eprint!(
-                "\n{: >width$}/{} ",
-                j,
-                image_height,
-                width = image_height.to_string().len()
-            );
-        }
-        eprint!(".");
-
-        let j = image_height - 1 - j;
-        for i in 0..image_width {
-            let mut color = Vec3::new(0.0, 0.0, 0.0);
-
-            for _ in 0..samples_per_pixel {
-                let u = (i as f32 + rand()) / (image_width as f32 - 1.0);
-                let v = (j as f32 + rand()) / (image_height as f32 - 1.0);
-                let ray = camera.get_ray(u, v);
-                color = color + ray.color(&world, max_depth);
+    let colors: Vec<Vec<Vec3>> = (0..image_height)
+        .map(|j| {
+            if j % 100 == 0 {
+                eprint!(
+                    "\n{: >width$}/{} ",
+                    j,
+                    image_height,
+                    width = image_height.to_string().len()
+                );
             }
+            eprint!(".");
 
-            color = translate_color(&color, samples_per_pixel as _);
+            let j = image_height - 1 - j;
+            (0..image_width)
+                .into_par_iter()
+                .map(|i| {
+                    let mut color = Vec3::new(0.0, 0.0, 0.0);
 
-            ppm::write_color(&mut stdout, &color)?;
+                    for _ in 0..samples_per_pixel {
+                        let u = (i as f32 + rand()) / (image_width as f32 - 1.0);
+                        let v = (j as f32 + rand()) / (image_height as f32 - 1.0);
+                        let ray = camera.get_ray(u, v);
+                        color = color + ray.color(&world, max_depth);
+                    }
+
+                    translate_color(&color, samples_per_pixel as _)
+                })
+                .collect()
+        })
+        .collect();
+
+    eprintln!("\n\nWriting image...");
+
+    let mut stdout = io::stdout();
+
+    ppm::write_header(&mut stdout, image_width, image_height)?;
+
+    for row in colors.iter() {
+        for color in row.iter() {
+            ppm::write_color(&mut stdout, &color).unwrap();
         }
     }
 
-    eprintln!("\n");
     eprintln!("Finished");
 
     Ok(())
