@@ -16,8 +16,6 @@ use world::World;
 
 use std::io;
 
-use rayon::prelude::*;
-
 fn main() -> io::Result<()> {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 1200;
@@ -42,14 +40,31 @@ fn main() -> io::Result<()> {
         )
     };
 
-    eprintln!("Rendering image: {}x{}px...", image_width, image_height);
-
     let world = World::random_scene();
+
+    eprintln!("Rendering image: {}x{}px...", image_width, image_height);
+    let colors = render_image(image_width, image_height, &camera, &world);
+
+    eprintln!("\n\nWriting image...");
+    write_image(image_width, image_height, &colors)?;
+
+    eprintln!("Finished");
+
+    Ok(())
+}
+
+fn render_image(
+    image_width: usize,
+    image_height: usize,
+    camera: &Camera,
+    world: &World,
+) -> Vec<Vec<Vec3>> {
+    use rayon::prelude::*;
 
     let samples_per_pixel = 100;
     let max_depth = 50;
 
-    let colors: Vec<Vec<Vec3>> = (0..image_height)
+    (0..image_height)
         .map(|j| {
             if j % 100 == 0 {
                 eprint!(
@@ -78,14 +93,7 @@ fn main() -> io::Result<()> {
                 })
                 .collect()
         })
-        .collect();
-
-    eprintln!("\n\nWriting image...");
-    write_image(image_width, image_height, &colors)?;
-
-    eprintln!("Finished");
-
-    Ok(())
+        .collect()
 }
 
 fn write_image(image_width: usize, image_height: usize, colors: &Vec<Vec<Vec3>>) -> io::Result<()> {
