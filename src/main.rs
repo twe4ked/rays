@@ -54,6 +54,14 @@ fn main() -> io::Result<()> {
     let max_depth = 50;
 
     for j in 0..image_height as usize {
+        if j % 100 == 0 {
+            eprint!(
+                "\n{: >width$}/{} ",
+                j,
+                image_height,
+                width = image_height.to_string().len()
+            );
+        }
         eprint!(".");
 
         let j = image_height - 1 - j;
