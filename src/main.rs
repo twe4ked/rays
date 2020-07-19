@@ -10,9 +10,7 @@ mod vec3;
 mod world;
 
 use camera::Camera;
-use material::{Dielectric, Lambertian, Metal};
-use rand::{rand, rand_between};
-use surface::Sphere;
+use rand::rand;
 use vec3::Vec3;
 use world::World;
 
@@ -46,7 +44,7 @@ fn main() -> io::Result<()> {
 
     eprintln!("Rendering image: {}x{}px...", image_width, image_height);
 
-    let world = random_scene();
+    let world = World::random_scene();
 
     let samples_per_pixel = 100;
     let max_depth = 50;
@@ -97,65 +95,6 @@ fn main() -> io::Result<()> {
     eprintln!("Finished");
 
     Ok(())
-}
-
-fn random_scene() -> World {
-    let mut world = World::new();
-
-    let ground_material = Lambertian::new(Vec3::new(0.5, 0.5, 0.5));
-    world.add(
-        Box::new(Sphere::new(Vec3::new(0.0, -1000.0, 0.0), 1000.0)),
-        Box::new(ground_material),
-    );
-
-    for a in -11..11 {
-        for b in -11..11 {
-            let choose_material = rand();
-            let center = Vec3::new(a as f32 + 0.9 * rand(), 0.2, b as f32 + 0.9 * rand());
-
-            if (center - Vec3::new(4.0, 0.2, 0.0)).length() > 0.9 {
-                if choose_material < 0.8 {
-                    // Diffuse
-                    let albedo = Vec3::random(0.0, 1.0) * Vec3::random(0.0, 1.0);
-                    world.add(
-                        Box::new(Sphere::new(center, 0.2)),
-                        Box::new(Lambertian::new(albedo)),
-                    );
-                } else if choose_material < 0.95 {
-                    // Metal
-                    let albedo = Vec3::random(0.5, 1.0);
-                    let fuzz = rand_between(0.0, 0.5);
-                    world.add(
-                        Box::new(Sphere::new(center, 0.2)),
-                        Box::new(Metal::new(albedo, fuzz)),
-                    );
-                } else {
-                    // Glass
-                    world.add(
-                        Box::new(Sphere::new(center, 0.2)),
-                        Box::new(Dielectric::new(1.5)),
-                    );
-                }
-            }
-        }
-    }
-
-    world.add(
-        Box::new(Sphere::new(Vec3::new(0.0, 1.0, 0.0), 1.0)),
-        Box::new(Dielectric::new(1.5)),
-    );
-
-    world.add(
-        Box::new(Sphere::new(Vec3::new(-4.0, 1.0, 0.0), 1.0)),
-        Box::new(Lambertian::new(Vec3::new(0.4, 0.2, 0.1))),
-    );
-
-    world.add(
-        Box::new(Sphere::new(Vec3::new(4.0, 1.0, 0.0), 1.0)),
-        Box::new(Metal::new(Vec3::new(0.7, 0.6, 0.5), 0.0)),
-    );
-
-    world
 }
 
 fn translate_color(color: &Vec3, samples_per_pixel: f32) -> Vec3 {
