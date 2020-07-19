@@ -81,18 +81,23 @@ fn main() -> io::Result<()> {
         .collect();
 
     eprintln!("\n\nWriting image...");
+    write_image(image_width, image_height, &colors)?;
 
+    eprintln!("Finished");
+
+    Ok(())
+}
+
+fn write_image(image_width: usize, image_height: usize, colors: &Vec<Vec<Vec3>>) -> io::Result<()> {
     let mut stdout = io::stdout();
 
     ppm::write_header(&mut stdout, image_width, image_height)?;
 
     for row in colors.iter() {
         for color in row.iter() {
-            ppm::write_color(&mut stdout, &color).unwrap();
+            ppm::write_color(&mut stdout, &color)?;
         }
     }
-
-    eprintln!("Finished");
 
     Ok(())
 }
