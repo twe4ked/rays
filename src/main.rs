@@ -21,10 +21,9 @@ fn main() -> io::Result<()> {
     let image_width = 1200;
     let image_height = (image_width as f32 / aspect_ratio) as usize;
 
-    let world = World::random_scene();
-
     eprintln!("Rendering image: {}x{}px...", image_width, image_height);
     let camera = init_camera(aspect_ratio);
+    let world = random_scene();
     let colors = render_image(image_width, image_height, &camera, &world);
 
     eprintln!("\n\nWriting image...");
@@ -52,6 +51,69 @@ fn init_camera(aspect_ratio: f32) -> Camera {
         aperture,
         focus_dist,
     )
+}
+
+fn random_scene() -> World {
+    use crate::material::{Dielectric, Lambertian, Metal};
+    use crate::rand::rand_between;
+    use crate::surface::Sphere;
+
+    let mut world = World::new();
+
+    let ground_material = Lambertian::new(Vec3::new(0.5, 0.5, 0.5));
+    world.add(
+        Box::new(Sphere::new(Vec3::new(0.0, -1000.0, 0.0), 1000.0)),
+        Box::new(ground_material),
+    );
+
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_material = rand();
+            let center = Vec3::new(a as f32 + 0.9 * rand(), 0.2, b as f32 + 0.9 * rand());
+
+            if (center - Vec3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+                if choose_material < 0.8 {
+                    // Diffuse
+                    let albedo = Vec3::random(0.0, 1.0) * Vec3::random(0.0, 1.0);
+                    world.add(
+                        Box::new(Sphere::new(center, 0.2)),
+                        Box::new(Lambertian::new(albedo)),
+                    );
+                } else if choose_material < 0.95 {
+                    // Metal
+                    let albedo = Vec3::random(0.5, 1.0);
+                    let fuzz = rand_between(0.0, 0.5);
+                    world.add(
+                        Box::new(Sphere::new(center, 0.2)),
+                        Box::new(Metal::new(albedo, fuzz)),
+                    );
+                } else {
+                    // Glass
+                    world.add(
+                        Box::new(Sphere::new(center, 0.2)),
+                        Box::new(Dielectric::new(1.5)),
+                    );
+                }
+            }
+        }
+    }
+
+    world.add(
+        Box::new(Sphere::new(Vec3::new(0.0, 1.0, 0.0), 1.0)),
+        Box::new(Dielectric::new(1.5)),
+    );
+
+    world.add(
+        Box::new(Sphere::new(Vec3::new(-4.0, 1.0, 0.0), 1.0)),
+        Box::new(Lambertian::new(Vec3::new(0.4, 0.2, 0.1))),
+    );
+
+    world.add(
+        Box::new(Sphere::new(Vec3::new(4.0, 1.0, 0.0), 1.0)),
+        Box::new(Metal::new(Vec3::new(0.7, 0.6, 0.5), 0.0)),
+    );
+
+    world
 }
 
 fn render_image(
