@@ -14,7 +14,7 @@ use rand::rand;
 use vec3::Vec3;
 use world::World;
 
-use std::io;
+use std::io::{self, BufWriter, Write};
 
 fn main() -> io::Result<()> {
     let aspect_ratio = 16.0 / 9.0;
@@ -160,7 +160,7 @@ fn render_image(
 }
 
 fn write_image(image_width: usize, image_height: usize, colors: &Vec<Vec<Vec3>>) -> io::Result<()> {
-    let mut stdout = io::stdout();
+    let mut stdout = BufWriter::new(io::stdout());
 
     ppm::write_header(&mut stdout, image_width, image_height)?;
 
@@ -169,6 +169,8 @@ fn write_image(image_width: usize, image_height: usize, colors: &Vec<Vec<Vec3>>)
             ppm::write_color(&mut stdout, &color)?;
         }
     }
+
+    stdout.flush()?;
 
     Ok(())
 }
