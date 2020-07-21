@@ -15,6 +15,7 @@ pub struct Rand {
 
 impl Rand {
     pub fn new(seed: u32) -> Self {
+        #[allow(clippy::unreadable_literal)]
         let mut rand = Rand {
             a: Wrapping(0xf1ea5eed),
             d: Wrapping(seed),
