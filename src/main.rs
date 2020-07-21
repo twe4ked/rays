@@ -159,7 +159,7 @@ fn render_image(
         .collect()
 }
 
-fn write_image(image_width: usize, image_height: usize, colors: &Vec<Vec<Vec3>>) -> io::Result<()> {
+fn write_image(image_width: usize, image_height: usize, colors: &[Vec<Vec3>]) -> io::Result<()> {
     let mut stdout = BufWriter::new(io::stdout());
 
     ppm::write_header(&mut stdout, image_width, image_height)?;
