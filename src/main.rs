@@ -21,28 +21,10 @@ fn main() -> io::Result<()> {
     let image_width = 1200;
     let image_height = (image_width as f32 / aspect_ratio) as usize;
 
-    let camera = {
-        let look_from = Vec3::new(13.0, 2.0, 3.0);
-        let look_at = Vec3::new(0.0, 0.0, 0.0);
-        let v_up = Vec3::new(0.0, 1.0, 0.0);
-
-        let focus_dist = 10.0;
-        let aperture = 0.1;
-
-        Camera::new(
-            look_from,
-            look_at,
-            v_up,
-            20.0,
-            aspect_ratio,
-            aperture,
-            focus_dist,
-        )
-    };
-
     let world = World::random_scene();
 
     eprintln!("Rendering image: {}x{}px...", image_width, image_height);
+    let camera = init_camera(aspect_ratio);
     let colors = render_image(image_width, image_height, &camera, &world);
 
     eprintln!("\n\nWriting image...");
@@ -51,6 +33,25 @@ fn main() -> io::Result<()> {
     eprintln!("Finished");
 
     Ok(())
+}
+
+fn init_camera(aspect_ratio: f32) -> Camera {
+    let look_from = Vec3::new(13.0, 2.0, 3.0);
+    let look_at = Vec3::new(0.0, 0.0, 0.0);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let v_fov = 20.0;
+    let focus_dist = 10.0;
+    let aperture = 0.1;
+
+    Camera::new(
+        look_from,
+        look_at,
+        v_up,
+        v_fov,
+        aspect_ratio,
+        aperture,
+        focus_dist,
+    )
 }
 
 fn render_image(
